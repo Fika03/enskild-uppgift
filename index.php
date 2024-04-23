@@ -8,9 +8,11 @@ $dbContext = new DBContext();
 $sortOrder = $_GET['sortOrder'] ?? "";
 $sortCol = $_GET['sortCol'] ?? "";
 
-
+// Fetch all products if no search query is provided
+if (!isset($_GET['searchproduct'])) {
+    $allProducts = $dbContext->getAllProducts($sortCol, $sortOrder);
+}
 ?>
-
 
 
 <!DOCTYPE html>
@@ -132,16 +134,13 @@ $sortCol = $_GET['sortCol'] ?? "";
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Loop through the search results and create table rows -->
+                    <!-- Loop through the search results or all products and create table rows -->
                     <?php
-                    // Assuming you have already included your Database class and created an instance of it ($dbContext)
-                    
-                    // Check if a search query is provided and display search results if applicable
                     if (isset($_GET['searchproduct'])) {
+                        // Search query provided
                         $searchQuery = $_GET['searchproduct'];
                         $searchResults = $dbContext->getProductByTitle($searchQuery, $sortCol, $sortOrder);
 
-                        // Display search results
                         if (!empty($searchResults)) {
                             echo "<h3>Search Results</h3>";
                             echo "<table class='table'>";
@@ -159,10 +158,28 @@ $sortCol = $_GET['sortCol'] ?? "";
                         } else {
                             echo "<p>No products found matching your search query.</p>";
                         }
+                    } else {
+                        // No search query provided, display all products
+                        if (!empty($allProducts)) {
+                            echo "<h3>All Products</h3>";
+                            echo "<table class='table'>";
+                            echo "<tbody>";
+                            foreach ($allProducts as $product) {
+                                echo "<tr>";
+                                echo "<td>{$product->title}</td>";
+                                echo "<td>{$product->categoryId}</td>";
+                                echo "<td>{$product->price}</td>";
+                                echo "<td>{$product->stockLevel}</td>";
+                                echo "<td><a href='product.php?id={$product->id}' class='btn btn-primary'>Edit</a></td>"; // Edit button with product ID as parameter
+                                echo "</tr>";
+                            }
+                            echo "</tbody></table>";
+                        } else {
+                            echo "<p>No products available.</p>";
+                        }
                     }
                     ?>
                 </tbody>
-
             </table>
         </div>
     </section>
