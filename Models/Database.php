@@ -1,24 +1,32 @@
 <?php
 require_once ('Models/Product.php');
 require_once ('Models/Category.php');
+require 'vendor/autoload.php';
 
 class DBContext
 {
-    private $host = '127.0.0.1';
-    private $db = 'produktdatabas';
-    private $user = 'root';
-    private $pass = 'root';
-    private $charset = 'utf8mb4';
 
     private $pdo;
 
+
+
     function __construct()
     {
-        $dsn = "mysql:host=$this->host;dbname=$this->db";
-        $this->pdo = new PDO($dsn, $this->user, $this->pass);
+
+        $dotenv = \Dotenv\Dotenv::createImmutable(__DIR__ . '../../');
+        $dotenv->load();
+
+        $host = $_ENV['host'];
+        $db = $_ENV['db'];
+        $user = $_ENV['user'];
+        $pass = $_ENV['pass'];
+
+        $dsn = "mysql:host=$host;dbname=$db";
+        $this->pdo = new PDO($dsn, $user, $pass);
         $this->initIfNotInitialized();
         $this->seedfNotSeeded();
     }
+
 
     function getAllCategories()
     {
@@ -27,11 +35,19 @@ class DBContext
     }
 
 
-
-    function getAllProducts()
+    function getAllProducts($sortCol, $sortOrder)
     {
-        return $this->pdo->query('SELECT * FROM products')->fetchAll(PDO::FETCH_CLASS, 'Product');
+        if ($sortCol == null) {
+            $sortCol = "Id";
+        }
+        if ($sortOrder == null) {
+            $sortOrder = "asc";
+        }
+        $stmt = $this->pdo->prepare("SELECT * FROM products ORDER BY $sortCol $sortOrder");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_CLASS, 'Product');
     }
+
     function getProduct($id)
     {
         $prep = $this->pdo->prepare('SELECT * FROM products where id=:id');
@@ -39,22 +55,38 @@ class DBContext
         $prep->execute(['id' => $id]);
         return $prep->fetch();
     }
-    function getProductByTitle($title)
+    function getProductByTitle($title, $sortCol = null, $sortOrder = null)
     {
-        $prep = $this->pdo->prepare('SELECT * FROM products where title=:title');
-        $prep->setFetchMode(PDO::FETCH_CLASS, 'Product');
-        $prep->execute(['title' => $title]);
-        return $prep->fetch();
+        // Set default sorting if not provided
+        if ($sortCol == null) {
+            $sortCol = "Id"; // Assuming the primary key column is named "Id"
+        }
+        if ($sortOrder == null) {
+            $sortOrder = "asc";
+        }
+
+        // Construct the SQL query
+        $sql = "SELECT * FROM products WHERE title LIKE :title ORDER BY $sortCol $sortOrder";
+
+        // Prepare and execute the query
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':title', "%$title%", PDO::PARAM_STR);
+        $stmt->execute();
+
+        // Fetch and return the results
+        return $stmt->fetchAll(PDO::FETCH_CLASS, 'Product');
     }
+
+
+
 
     function getCategoryByTitle($title): Category|false
     {
-        $prep = $this->pdo->prepare('SELECT * FROM category where title=:title');
+        $prep = $this->pdo->prepare('SELECT * FROM categoryId where title=:title');
         $prep->setFetchMode(PDO::FETCH_CLASS, 'Category');
         $prep->execute(['title' => $title]);
         return $prep->fetch();
     }
-
 
 
     function seedfNotSeeded()
