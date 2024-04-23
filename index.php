@@ -92,8 +92,8 @@ if ($selectedCategory) {
     <!-- Section-->
     <section class="py-5">
         <div class="container px-4 px-lg-5 mt-5">
-            <form id="categoryForm" method="GET">
-                <select name="selectedCategory" onchange="document.getElementById('categoryForm').submit()">
+            <form method="GET" onchange="submit()">
+                <select name="selectedCategory">
                     <option value="">All Categories</option>
                     <?php
                     foreach ($dbContext->getAllCategories() as $category) {
@@ -105,7 +105,7 @@ if ($selectedCategory) {
             </form>
 
 
-            <form method="GET">
+            <form method=" GET">
                 <input placeholder="Search" name="searchproduct" value="<?php echo $searchQuery; ?>">
             </form>
 
