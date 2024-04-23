@@ -1,8 +1,10 @@
 <?php
-class Category{
+class Category
+{
     public $id;
     public $title;
-};
+}
+;
 
 
 

@@ -7,13 +7,15 @@ $dbContext = new DBContext();
 
 $sortOrder = $_GET['sortOrder'] ?? "";
 $sortCol = $_GET['sortCol'] ?? "";
+$searchQuery = $_GET['searchproduct'] ?? "";
+$selectedCategory = $_GET['selectedCategory'] ?? "";
 
-// Fetch all products if no search query is provided
-if (!isset($_GET['searchproduct'])) {
+if ($selectedCategory) {
+    $allProducts = $dbContext->getProductsByCategory($selectedCategory, $sortCol, $sortOrder);
+} else {
     $allProducts = $dbContext->getAllProducts($sortCol, $sortOrder);
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -46,13 +48,13 @@ if (!isset($_GET['searchproduct'])) {
                         <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">Categorier</a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="#!">All Products</a></li>
+                            <li><a class="dropdown-item" href="?selectedCategory=">All Products</a></li>
                             <li>
                                 <hr class="dropdown-divider" />
                             </li>
                             <?php
                             foreach ($dbContext->getAllCategories() as $category) {
-                                echo "<li><a class='dropdown-item' href='#!'>$category->title</a></li> ";
+                                echo "<li><a class='dropdown-item' href='?selectedCategory={$category->title}'>$category->title</a></li> ";
                             }
                             ?>
 
@@ -90,17 +92,21 @@ if (!isset($_GET['searchproduct'])) {
     <!-- Section-->
     <section class="py-5">
         <div class="container px-4 px-lg-5 mt-5">
-            <select>
-                <?php
-                foreach ($dbContext->getAllCategories() as $category) {
-                    echo "<option>$category->title</option> ";
-                }
-                ?>
+            <form id="categoryForm" method="GET">
+                <select name="selectedCategory" onchange="document.getElementById('categoryForm').submit()">
+                    <option value="">All Categories</option>
+                    <?php
+                    foreach ($dbContext->getAllCategories() as $category) {
+                        $selected = ($selectedCategory == $category->title) ? 'selected' : '';
+                        echo "<option value='{$category->title}' $selected>{$category->title}</option>";
+                    }
+                    ?>
+                </select>
+            </form>
 
-            </select>
 
             <form method="GET">
-                <input placeholder="Search" name="searchproduct">
+                <input placeholder="Search" name="searchproduct" value="<?php echo $searchQuery; ?>">
             </form>
 
             <table class="table">
@@ -108,78 +114,58 @@ if (!isset($_GET['searchproduct'])) {
                     <tr>
                         <th>
                             <a
-                                href="?sortCol=title&sortOrder=<?php echo ($sortCol === 'title' && $sortOrder === 'asc') ? 'desc' : 'asc'; ?>&searchproduct=<?php echo urlencode(isset($_GET['searchproduct']) ? $_GET['searchproduct'] : ''); ?>">
+                                href="?sortCol=title&sortOrder=<?php echo ($sortCol === 'title' && $sortOrder === 'asc') ? 'desc' : 'asc'; ?>&searchproduct=<?php echo urlencode($searchQuery); ?>&selectedCategory=<?php echo urlencode($selectedCategory); ?>">
                                 Name
                             </a>
                         </th>
                         <th>
                             <a
-                                href="?sortCol=categoryId&sortOrder=<?php echo ($sortCol === 'categoryId' && $sortOrder === 'asc') ? 'desc' : 'asc'; ?>&searchproduct=<?php echo urlencode(isset($_GET['searchproduct']) ? $_GET['searchproduct'] : ''); ?>">
+                                href="?sortCol=categoryId&sortOrder=<?php echo ($sortCol === 'categoryId' && $sortOrder === 'asc') ? 'desc' : 'asc'; ?>&searchproduct=<?php echo urlencode($searchQuery); ?>&selectedCategory=<?php echo urlencode($selectedCategory); ?>">
                                 Category
                             </a>
                         </th>
                         <th>
                             <a
-                                href="?sortCol=price&sortOrder=<?php echo ($sortCol === 'price' && $sortOrder === 'asc') ? 'desc' : 'asc'; ?>&searchproduct=<?php echo urlencode(isset($_GET['searchproduct']) ? $_GET['searchproduct'] : ''); ?>">
+                                href="?sortCol=price&sortOrder=<?php echo ($sortCol === 'price' && $sortOrder === 'asc') ? 'desc' : 'asc'; ?>&searchproduct=<?php echo urlencode($searchQuery); ?>&selectedCategory=<?php echo urlencode($selectedCategory); ?>">
                                 Price
                             </a>
                         </th>
                         <th>
                             <a
-                                href="?sortCol=stockLevel&sortOrder=<?php echo ($sortCol === 'stockLevel' && $sortOrder === 'asc') ? 'desc' : 'asc'; ?>&searchproduct=<?php echo urlencode(isset($_GET['searchproduct']) ? $_GET['searchproduct'] : ''); ?>">
+                                href="?sortCol=stockLevel&sortOrder=<?php echo ($sortCol === 'stockLevel' && $sortOrder === 'asc') ? 'desc' : 'asc'; ?>&searchproduct=<?php echo urlencode($searchQuery); ?>&selectedCategory=<?php echo urlencode($selectedCategory); ?>">
                                 Stock level
                             </a>
                         </th>
+                        <th>
+                            <a
+                                href="?sortCol=popularity&sortOrder=<?php echo ($sortCol === 'popularity' && $sortOrder === 'asc') ? 'desc' : 'asc'; ?>&searchproduct=<?php echo urlencode($searchQuery); ?>&selectedCategory=<?php echo urlencode($selectedCategory); ?>">
+                                Popularity
+                            </a>
+                        </th>
+
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Loop through the search results or all products and create table rows -->
                     <?php
-                    if (isset($_GET['searchproduct'])) {
-                        // Search query provided
-                        $searchQuery = $_GET['searchproduct'];
-                        $searchResults = $dbContext->getProductByTitle($searchQuery, $sortCol, $sortOrder);
-
-                        if (!empty($searchResults)) {
-                            echo "<h3>Search Results</h3>";
-                            echo "<table class='table'>";
-                            echo "<tbody>";
-                            foreach ($searchResults as $result) {
-                                echo "<tr>";
-                                echo "<td>{$result->title}</td>";
-                                echo "<td>{$result->categoryId}</td>";
-                                echo "<td>{$result->price}</td>";
-                                echo "<td>{$result->stockLevel}</td>";
-                                echo "<td><a href='product.php?id={$result->id}' class='btn btn-primary'>Edit</a></td>"; // Edit button with product ID as parameter
-                                echo "</tr>";
-                            }
-                            echo "</tbody></table>";
-                        } else {
-                            echo "<p>No products found matching your search query.</p>";
+                    if (!empty($allProducts)) {
+                        foreach ($allProducts as $product) {
+                            echo "<tr>";
+                            echo "<td>{$product->title}</td>";
+                            echo "<td>{$product->categoryId}</td>";
+                            echo "<td>{$product->price}</td>";
+                            echo "<td>{$product->stockLevel}</td>";
+                            echo "<td>{$product->popularity}</td>";
+                            echo "<td><a href='product.php?id={$product->id}' class='btn btn-primary'>Edit</a></td>"; // Edit button with product ID as parameter
+                            echo "</tr>";
                         }
                     } else {
-                        // No search query provided, display all products
-                        if (!empty($allProducts)) {
-                            echo "<h3>All Products</h3>";
-                            echo "<table class='table'>";
-                            echo "<tbody>";
-                            foreach ($allProducts as $product) {
-                                echo "<tr>";
-                                echo "<td>{$product->title}</td>";
-                                echo "<td>{$product->categoryId}</td>";
-                                echo "<td>{$product->price}</td>";
-                                echo "<td>{$product->stockLevel}</td>";
-                                echo "<td><a href='product.php?id={$product->id}' class='btn btn-primary'>Edit</a></td>"; // Edit button with product ID as parameter
-                                echo "</tr>";
-                            }
-                            echo "</tbody></table>";
-                        } else {
-                            echo "<p>No products available.</p>";
-                        }
+                        echo "<tr><td colspan='5'>No products available.</td></tr>";
                     }
                     ?>
                 </tbody>
+            </table>
+
             </table>
         </div>
     </section>
