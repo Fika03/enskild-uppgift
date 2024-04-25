@@ -33,7 +33,7 @@ class DBContext
         return $this->pdo->query('SELECT * FROM category')->fetchAll(PDO::FETCH_CLASS, 'Category');
 
     }
-    function getProductsByCategory($categoryTitle, $sortCol = null, $sortOrder = null)
+    function getProductsByCategory($categoryTitle, $sortCol = null, $sortOrder = null, $searchQuery = null)
     {
         if ($sortCol == null) {
             $sortCol = "Id";
@@ -42,23 +42,49 @@ class DBContext
             $sortOrder = "asc";
         }
 
-        // Get the category by title
-        $category = $this->getCategoryByTitle($categoryTitle);
-        if (!$category) {
-            // If the category doesn't exist, return an empty array
-            return [];
+        // Get the category by title if provided
+        if (!empty($categoryTitle)) {
+            $category = $this->getCategoryByTitle($categoryTitle);
+            if (!$category) {
+                // If the category doesn't exist, return an empty array
+                return [];
+            }
+        } else {
+            $category = null; // No category specified
         }
 
-        // Fetch products based on the category ID
-        $sql = "SELECT * FROM products WHERE categoryId = :categoryId ORDER BY $sortCol $sortOrder";
+        // Prepare the SQL query
+        $sql = "SELECT * FROM products";
+        $sql .= ($category !== null) ? " WHERE categoryId = :categoryId" : "";
+        // Check if search query is provided
+        if (!empty($searchQuery)) {
+            $sql .= ($category !== null) ? " AND title LIKE :searchQuery" : " WHERE title LIKE :searchQuery";
+        }
+        $sql .= " ORDER BY $sortCol $sortOrder";
+
+        // Prepare and execute the statement
         $stmt = $this->pdo->prepare($sql);
-        $stmt->bindValue(':categoryId', $category->id, PDO::PARAM_INT);
+        if ($category !== null) {
+            $stmt->bindValue(':categoryId', $category->id, PDO::PARAM_INT);
+        }
+        if (!empty($searchQuery)) {
+            $stmt->bindValue(':searchQuery', "%$searchQuery%", PDO::PARAM_STR);
+        }
         $stmt->execute();
 
+        // Fetch and return the results
         return $stmt->fetchAll(PDO::FETCH_CLASS, 'Product');
     }
 
 
+    function getTopPopularProducts($limit = 10)
+    {
+        $sql = "SELECT * FROM products ORDER BY popularity DESC LIMIT :limit";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_CLASS, 'Product');
+    }
 
     function getAllProducts($sortCol, $sortOrder)
     {

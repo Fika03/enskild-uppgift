@@ -8,10 +8,11 @@ $dbContext = new DBContext();
 $sortOrder = $_GET['sortOrder'] ?? "";
 $sortCol = $_GET['sortCol'] ?? "";
 $searchQuery = $_GET['searchproduct'] ?? "";
-$selectedCategory = $_GET['selectedCategory'] ?? "";
+$selectedCategory = $_GET['selectedCategory'] ?? "All Categories";
+
 
 if ($selectedCategory) {
-    $allProducts = $dbContext->getProductsByCategory($selectedCategory, $sortCol, $sortOrder);
+    $allProducts = $dbContext->getProductsByCategory($selectedCategory !== 'All Categories' ? $selectedCategory : null, $sortCol, $sortOrder, $searchQuery);
 } else {
     $allProducts = $dbContext->getAllProducts($sortCol, $sortOrder);
 }
@@ -38,7 +39,7 @@ if ($selectedCategory) {
     <!-- Navigation-->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container px-4 px-lg-5">
-            <a class="navbar-brand" href="#!">SuperShoppen</a>
+            <a class="navbar-brand" href="/">Fikas Webbshop</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
                 aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
@@ -74,18 +75,32 @@ if ($selectedCategory) {
         </div>
     </nav>
     <!-- Header-->
-    <header class="bg-dark py-5">
+    <header class="py-5" style="background-color: #d8b9ff;">
         <div class="container px-4 px-lg-5 my-5">
             <div class="text-center text-white">
+                <h3 class="text-white">Våra populära produkter!</h3>
+            </div>
+            <div class="row row-cols-1 row-cols-md-3 g-4">
                 <?php
-                $hour = date('h');
-                if ($hour >= 9) {
+                $popularProducts = $dbContext->getTopPopularProducts();
+                foreach ($popularProducts as $product) {
                     ?>
-                    <h1 class="display-4 fw-bolder">Super shoppen</h1>
+                    <div class="col">
+                        <a href="product.php?id=<?php echo $product->id; ?>&title=<?php echo urlencode($product->title); ?>&price=<?php echo urlencode($product->price); ?>"
+                            class="text-decoration-none text-dark">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        <?php echo $product->title; ?>
+                                    </h5>
+                                </div>
+                            </div>
+                        </a>
+
+                    </div>
                     <?php
                 }
                 ?>
-                <p class="lead fw-normal text-white-50 mb-0">Handla massa onödigt hos oss!</p>
             </div>
         </div>
     </header>
@@ -94,7 +109,8 @@ if ($selectedCategory) {
         <div class="container px-4 px-lg-5 mt-5">
             <form method="GET" onchange="submit()">
                 <select name="selectedCategory">
-                    <option value="">All Categories</option>
+                    <option <?php if (!$selectedCategory)
+                        echo 'selected'; ?>>All Categories</option>
                     <?php
                     foreach ($dbContext->getAllCategories() as $category) {
                         $selected = ($selectedCategory == $category->title) ? 'selected' : '';
@@ -104,10 +120,15 @@ if ($selectedCategory) {
                 </select>
             </form>
 
-
-            <form method=" GET">
-                <input placeholder="Search" name="searchproduct" value="<?php echo $searchQuery; ?>">
+            <form method="GET">
+                <input type="hidden" name="sortCol" value="<?php echo htmlspecialchars($sortCol); ?>">
+                <input type="hidden" name="sortOrder" value="<?php echo htmlspecialchars($sortOrder); ?>">
+                <?php if ($selectedCategory !== ""): ?>
+                    <input type="hidden" name="selectedCategory" value="<?php echo htmlspecialchars($selectedCategory); ?>">
+                <?php endif; ?>
+                <input placeholder="Search" name="searchproduct" value="<?php echo htmlspecialchars($searchQuery); ?>">
             </form>
+
 
             <table class="table">
                 <thead>
@@ -156,7 +177,8 @@ if ($selectedCategory) {
                             echo "<td>{$product->price}</td>";
                             echo "<td>{$product->stockLevel}</td>";
                             echo "<td>{$product->popularity}</td>";
-                            echo "<td><a href='product.php?id={$product->id}' class='btn btn-primary'>Edit</a></td>"; // Edit button with product ID as parameter
+                            echo "<td><a href='product.php?id={$product->id}&title=" . urlencode($product->title) . "&price=" . urlencode($product->price) . "' class='btn btn-primary'>Buy</a></td>";
+
                             echo "</tr>";
                         }
                     } else {
