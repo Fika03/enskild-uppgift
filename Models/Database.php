@@ -1,4 +1,7 @@
 <?php
+//THIS IS OLD CODE, NOT USED ANYMORE
+
+//SAVING INCASE I NEED IT FOR THE FUTURE
 require_once ('Models/Product.php');
 require_once ('Models/Category.php');
 require 'vendor/autoload.php';
