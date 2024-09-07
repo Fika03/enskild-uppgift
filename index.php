@@ -2,7 +2,7 @@
 
 // fetch
 $curl = curl_init();
-curl_setopt($curl, CURLOPT_URL, "https://enskild-server.vercel.app/data");
+curl_setopt($curl, CURLOPT_URL, "http://localhost:4242/data");
 curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 $response = curl_exec($curl);
 curl_close($curl);
