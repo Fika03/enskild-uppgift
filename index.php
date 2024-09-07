@@ -237,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <th><a
                                     href="?sortCol=popularity&sortOrder=<?php echo ($sortOrder === 'asc') ? 'desc' : 'asc'; ?>">Popularity</a>
                             </th>
-                            <th>Buy</th>
+                            <th>Edit product</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -250,7 +250,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 echo "<td>{$product['price']}</td>";
                                 echo "<td>{$product['stockLevel']}</td>";
                                 echo "<td>{$product['popularity']}</td>";
-                                echo "<td><a href='product.php?id={$product['id']}&title=" . urlencode($product['title']) . "&price=" . urlencode($product['price']) . "' class='btn btn-primary'>Buy</a></td>";
+                                echo "<td><a href='product.php?id={$product['id']}&title=" . urlencode($product['title']) . "&price=" . urlencode($product['price']) . "' class='btn btn-primary'>Edit</a></td>";
                                 echo "</tr>";
                             }
                         } else {

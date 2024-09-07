@@ -1,8 +1,7 @@
 <?php
 // Handle Add Product
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['addProduct'])) {
-    // Generate a random numeric ID between a specified range (e.g., 1000 to 9999)
-    $randomId = rand(1000, 9999); // Adjust range as needed
+    $randomId = rand(1000, 9999);
 
     $newProduct = [
         "id" => $randomId,
@@ -17,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['addProduct'])) {
 
 function addProduct($newProduct)
 {
-    $url = "http://localhost:4242/data"; // Adjust the URL to your actual API endpoint for adding products
+    $url = "http://localhost:4242/data";
     $context = stream_context_create([
         'http' => [
             'method' => 'POST',
@@ -29,8 +28,8 @@ function addProduct($newProduct)
     if ($response === FALSE) {
         die('Error adding product.');
     }
-    echo "Product added successfully.";
-    header("Refresh:2; url=index.php"); // Redirect after adding
+    echo "Product added.";
+    header("Refresh:2; url=index.php");
     exit();
 }
 ?>
