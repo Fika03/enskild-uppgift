@@ -139,6 +139,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     </li>
                     <li class="nav-item"><a class="nav-link" href="#!">Login</a></li>
                     <li class="nav-item"><a class="nav-link" href="#!">Create account</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/addproduct.php">Add a Product!</a>
+                    </li>
                 </ul>
                 <form class="d-flex">
                     <button class="btn btn-outline-dark" type="submit">
